@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Goodreads Books - Sampling + Labeling Lens</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Goodreads Books – Sampling + Labeling Lens</h1>
+    <p> Interactive D3 scatterplot for exploring Goodreads book data.
+  The visualization combines a focus region with a lens that suppresses non-matching books
+  and enriches selected books with labels and detail information.</p>
+  </header>
+
+  <main>
+    <!-- Globale Filter -->
+<details class="controls global-filter-panel">
+  <summary>
+    🌍 Globale Filter
+    <span style="font-size:12px;color:#6c757d;margin-left:10px;">
+      aufklappen / zuklappen
+    </span>
+  </summary>
+
+  <div class="global-filter-content">
+
+    <div class="control-group axis-filter-source" id="filterBlockRating">
+      <h3>⭐ Rating</h3>
+      <label>Min. Rating: <span id="globalMinRatingValue">0.0</span>
+        <input id="globalMinRating" type="range" min="0" max="5" step="0.1" value="0" />
+      </label>
+    </div>
+
+    <div class="control-group axis-filter-source" id="filterBlockPages">
+      <h3>📄 Seiten</h3>
+      <label>Min. Seiten: <span id="globalMinPagesValue">0</span>
+        <input id="globalMinPages" type="range" min="0" max="2000" step="50" value="0" />
+      </label>
+      <label>Max. Seiten: <span id="globalMaxPagesValue">7000</span>
+        <input id="globalMaxPages" type="range" min="0" max="7000" step="50" value="7000" />
+      </label>
+    </div>
+
+    <div class="control-group axis-filter-source" id="filterBlockYear">
+      <h3>📅 Erscheinungsjahr</h3>
+      <label>Min. Jahr: <span id="globalMinYearValue">1900</span>
+        <input id="globalMinYear" type="range" min="1800" max="2020" step="10" value="1900" />
+      </label>
+      <label>Max. Jahr: <span id="globalMaxYearValue">2030</span>
+        <input id="globalMaxYear" type="range" min="1800" max="2030" step="10" value="2010" />
+      </label>
+    </div>
+
+    <div class="control-group axis-filter-source" id="filterBlockRatingsCount">
+      <h3>👍 Bewertungen</h3>
+      <label>Min. Bewertungen: <span id="globalMinRatingsCountValue">0</span>
+        <input id="globalMinRatingsCount" type="range" min="0" max="500000" step="10000" value="0" />
+      </label>
+      <label>Max. Bewertungen: <span id="globalMaxRatingsCountValue">5.000.000</span>
+        <input id="globalMaxRatingsCount" type="range" min="0" max="5000000" step="50000" value="5000000" />
+      </label>
+    </div>
+  </div>
+</details>
+
+<!-- Linsen-Filter -->
+<section class="controls lens-filters">
+  <div class="control-group">
+    <h3>🔬 Sampling + Labeling Lens</h3>
+
+    <label class="toggle-row">
+      <input type="checkbox" id="mouseLensToggle" checked />
+      🖱️ Mouse Lens aktiv
+    </label>
+    <label class="toggle-row">
+      <input type="checkbox" id="zoomModeCheck" checked />
+      📦 Focus Region aktiv
+    </label>
+
+    <label>Lens Radius:
+      <input id="lensRadius" type="range" min="80" max="300" step="10" value="150" />
+      <span id="lensRadiusValue">150</span>
+    </label>
+
+    <label>🎭 Genre in Linse:
+      <select id="lensGenre">
+        <option value="all">🌍 Alle Genres</option>
+        <option value="fantasy">🐉 Fantasy</option>
+        <option value="scifi">🚀 Sci-Fi</option>
+        <option value="thriller">🔪 Thriller</option>
+        <option value="classic">📖 Klassiker</option>
+        <option value="romance">💕 Romance</option>
+        <option value="horror">👻 Horror</option>
+        <option value="nonfiction">📰 Sachbuch</option>
+        <option value="other">📚 Sonstige</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="control-group">
+  <h3>📊 Achsen</h3>
+  <label>X-Achse:
+    <select id="xAxisSelect">
+      <option value="pages">📄 Seitenanzahl</option>
+      <option value="rating">⭐ Durchschnitts-Rating</option>
+      <option value="ratingsCount" selected>👍 Anzahl Bewertungen</option>
+      <option value="publicationYear">📅 Erscheinungsjahr</option>
+    </select>
+  </label>
+  <label>Y-Achse:
+    <select id="yAxisSelect">
+      <option value="rating" selected>⭐ Durchschnitts-Rating</option>
+      <option value="pages">📄 Seitenanzahl</option>
+      <option value="ratingsCount">👍 Anzahl Bewertungen</option>
+      <option value="publicationYear">📅 Erscheinungsjahr</option>
+    </select>
+  </label>
+</div>
+
+<div class="control-group">
+  <h3>⚙️ Darstellung</h3>
+  <label>Punktgröße:
+    <input id="pointSize" type="range" min="1" max="4" step="0.5" value="2" />
+    <span id="pointSizeValue">2</span>
+  </label>
+  <label>Max. Punkte:
+    <input id="maxPoints" type="range" min="1000" max="10000" step="500" value="5000" />
+    <span id="maxPointsValue">5000</span>
+  </label>
+  <label style="margin-top:8px;background:#e9ecef;padding:4px 8px;border-radius:8px;">
+    📊 Gefiltert: <span id="filteredCount">0</span> / <span id="totalCount">0</span> Bücher
+  </label>
+</div>
+
+      <div class="control-group">
+        <details class="mini-help" open>
+          <summary>ℹ️ Guide</summary>
+
+          <p><strong>🌍 Base View</strong><br>
+          Der Scatterplot zeigt die globale Übersicht über alle aktuell gefilterten Bücher.</p>
+
+          <p><strong>🔬 Sampling + Labeling Lens</strong><br>
+          Innerhalb der Linse werden nicht passende Punkte unterdrückt + Bücher im Mittelpunkt mit Detaila ergänzt.</p>
+
+          <p><strong>📦 Focus Region</strong><br>
+          Die rechteckige Region erzeugt eine zweite Detailansicht.</p>
+
+          <p><strong>🎯 Lens Parameters</strong><br>
+          Genre steuert, welche Bücher innerhalb der Linse sichtbar bleiben.</p>
+        </details>
+
+        <details class="mini-help color-legend">
+          <summary>🎨 Color Legend</summary>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#4e79a7;"></span>
+            <span>eng — English</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#2f5f8f;"></span>
+            <span>en-US — English US</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#8fb9d9;"></span>
+            <span>en-GB — English GB</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#59a14f;"></span>
+            <span>fre — French</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#e15759;"></span>
+            <span>ger — German</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#f28e2c;"></span>
+            <span>spa — Spanish</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#bab0ab;"></span>
+            <span>other — Other languages</span>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Haupt-Diagramm -->
+    <section class="chart-wrapper">
+      <div id="chart"></div>
+      <div id="tooltip" class="tooltip hidden"></div>
+      <div id="axisPicker" class="axis-picker-panel hidden">
+  <div class="axis-picker-title">📊 Achsen ändern</div>
+
+<div class="axis-picker-select-row">
+  <label>X-Achse:
+    <select id="xAxisPicker">
+      <option value="pages">📄 Seitenanzahl</option>
+      <option value="rating">⭐ Durchschnitts-Rating</option>
+      <option value="ratingsCount">👍 Anzahl Bewertungen</option>
+      <option value="publicationYear">📅 Erscheinungsjahr</option>
+    </select>
+  </label>
+
+  <label>Y-Achse:
+    <select id="yAxisPicker">
+      <option value="pages">📄 Seitenanzahl</option>
+      <option value="rating">⭐ Durchschnitts-Rating</option>
+      <option value="ratingsCount">👍 Anzahl Bewertungen</option>
+      <option value="publicationYear">📅 Erscheinungsjahr</option>
+    </select>
+  </label>
+</div>
+
+  <div id="axisFilterDock" class="axis-filter-dock"></div>
+  <button id="axisPickerClose">Schließen</button>
+</div>
+    </section>
+
+    <!-- Zoom-Detail-Diagramm (unten) -->
+    <section class="chart-wrapper zoom-chart-wrapper" id="zoomChartWrapper" style="margin-top:24px;display:none;">
+      <div style="padding:12px 20px;background:#f8f9fc;border-bottom:1px solid #e9ecef;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:600;color:#2c3e66;">🔍 Focus Region: <span id="zoomCount">0</span> Bücher im ausgewählten Bereich</span>
+        <button id="zoomCloseBtn" style="padding:4px 12px;background:#e94560;color:white;border:none;border-radius:4px;cursor:pointer;">✕ Schließen</button>
+      </div>
+      <div id="zoomChart"></div>
+      <div id="zoomTooltip" class="tooltip hidden"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="script.js"></script>
+</body>
+</html>
