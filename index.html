@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Goodreads Books - Local Analysis Lens</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>Goodreads Books – Local Analysis Lens</h1>
+    <p>Interactive D3 scatterplot for exploring Goodreads book data.
+  The Local Analysis Lens keeps the global overview while filtering, summarizing,
+  and locally re-encoding books inside the lens.</p>
+  </header>
+
+  <main>
+    <!-- Global filters -->
+<details class="controls global-filter-panel">
+  <summary>
+    🌍 Global filters
+    <span style="font-size:12px;color:#6c757d;margin-left:10px;">
+      open / close
+    </span>
+  </summary>
+
+  <div class="global-filter-content">
+
+    <div class="control-group axis-filter-source" id="filterBlockRating">
+      <h3>⭐ Rating</h3>
+      <label>Min. Rating: <span id="globalMinRatingValue">0.0</span>
+        <input id="globalMinRating" type="range" min="0" max="5" step="0.1" value="0" />
+      </label>
+    </div>
+
+    <div class="control-group axis-filter-source" id="filterBlockPages">
+      <h3>📄 Pages</h3>
+      <label>Min. pages: <span id="globalMinPagesValue">0</span>
+        <input id="globalMinPages" type="range" min="0" max="2000" step="50" value="0" />
+      </label>
+      <label>Max. pages: <span id="globalMaxPagesValue">7000</span>
+        <input id="globalMaxPages" type="range" min="0" max="7000" step="50" value="7000" />
+      </label>
+    </div>
+
+    <div class="control-group axis-filter-source" id="filterBlockYear">
+      <h3>📅 Publication year</h3>
+      <label>Min. year: <span id="globalMinYearValue">1900</span>
+        <input id="globalMinYear" type="range" min="1800" max="2020" step="10" value="1900" />
+      </label>
+      <label>Max. year: <span id="globalMaxYearValue">2030</span>
+        <input id="globalMaxYear" type="range" min="1800" max="2030" step="10" value="2010" />
+      </label>
+    </div>
+
+    <div class="control-group axis-filter-source" id="filterBlockRatingsCount">
+      <h3>👍 Ratings count</h3>
+      <label>Min. ratings: <span id="globalMinRatingsCountValue">0</span>
+        <input id="globalMinRatingsCount" type="range" min="0" max="500000" step="10000" value="0" />
+      </label>
+      <label>Max. ratings: <span id="globalMaxRatingsCountValue">5.000.000</span>
+        <input id="globalMaxRatingsCount" type="range" min="0" max="5000000" step="50000" value="5000000" />
+      </label>
+    </div>
+  </div>
+</details>
+
+<!-- Lens filters -->
+<section class="controls lens-filters">
+  <div class="control-group">
+    <h3>🔬 Local Analysis Lens</h3>
+
+    <label class="toggle-row">
+      <input type="checkbox" id="mouseLensToggle" checked />
+      🖱️ Mouse lens enabled
+    </label>
+    <label class="toggle-row">
+      <input type="checkbox" id="zoomModeCheck" checked />
+      📦 Focus region enabled
+    </label>
+
+    <label>Lens radius:
+      <input id="lensRadius" type="range" min="80" max="300" step="10" value="150" />
+      <span id="lensRadiusValue">150</span>
+    </label>
+
+    <label class="compact-slider">Update threshold:
+      <input id="lensMoveThreshold" type="range" min="4" max="50" step="1" value="8" />
+      <span id="lensMoveThresholdValue">8</span> px
+      <small class="helper-text compact-helper"><br></small>
+    </label>
+
+    <label>🎭 Genre inside lens:
+      <select id="lensGenre">
+        <option value="all">🌍 All</option>
+        <option value="fantasy">🐉 Fantasy</option>
+        <option value="scifi">🚀 Sci-Fi</option>
+        <option value="dystopian">🏛️ Dystopian</option>
+        <option value="thriller">🔪 Thriller / Mystery</option>
+        <option value="classic">📖 Classic / Literary</option>
+        <option value="romance">💕 Romance</option>
+        <option value="horror">👻 Horror / Paranormal</option>
+        <option value="youngadult">🎒 Young Adult</option>
+        <option value="nonfiction">📰 Non-fiction</option>
+        <option value="other">📚 Other Fiction</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="control-group">
+  <h3>📊 Axes</h3>
+  <label>X-axis:
+    <select id="xAxisSelect">
+      <option value="pages">📄 Pages</option>
+      <option value="rating">⭐ Average rating</option>
+      <option value="ratingsCount" selected>👍 Ratings count</option>
+      <option value="publicationYear">📅 Publication year</option>
+    </select>
+  </label>
+  <label>Y-axis:
+    <select id="yAxisSelect">
+      <option value="rating" selected>⭐ Average rating</option>
+      <option value="pages">📄 Pages</option>
+      <option value="ratingsCount">👍 Ratings count</option>
+      <option value="publicationYear">📅 Publication year</option>
+    </select>
+  </label>
+</div>
+
+<div class="control-group">
+  <h3>⚙️ Display</h3>
+  <label>Point size:
+    <input id="pointSize" type="range" min="1" max="4" step="0.5" value="2" />
+    <span id="pointSizeValue">2</span>
+  </label>
+  <label>Max. points:
+    <input id="maxPoints" type="range" min="1000" max="5000" step="100" value="5000" />
+    <span id="maxPointsValue">5,000</span>
+  </label>
+  <label class="count-label">
+    📊 Shown: <span id="filteredCount">0</span> / <span id="totalCount">0</span> total books
+  </label>
+</div>
+
+      <div class="control-group">
+        <details class="mini-help">
+          <summary>ℹ️ Guide</summary>
+
+          <p><strong>🌍 Base view</strong><br>
+          The scatterplot keeps the global overview of the displayed Goodreads books.</p>
+
+          <p><strong>🔬 Local Analysis Lens</strong><br>
+          The lens creates a temporary local view without changing the global scatterplot outside the lens.</p>
+
+          <p><strong>🧩 Lens functions</strong><br>
+          <strong>Suppress:</strong> the lens hides books inside the lens that do not match the active genre, rating or page filters. This is the clutter-reduction effect used by Sampling Lens examples.<br>
+          <strong>Alter:</strong> inside the lens, point sizes are temporarily re-encoded relative to the local lens region. Books above the local rating average get a green outline; books below it get an orange outline.<br>
+          <strong>Enrich:</strong> the lens adds local statistics plus detail cards for the focused book and the best candidate.</p>
+
+          <p><strong>🏆 Best candidate</strong><br>
+          The upper card shows the strongest local candidate. The score combines average rating, popularity and a preference for medium-length books.</p>
+
+          <p><strong>🎯 Focus book</strong><br>
+          The lower card shows the book closest to the lens center.</p>
+
+          <p><strong>⚙️ Performance slider</strong><br>
+          The update threshold controls how many pixels the mouse must move before the lens redraws. Choose a higher value on slower PCs; choose a lower value for a more direct lens feeling.</p>
+
+          <p><strong>📦 Focus region</strong><br>
+          Draw a rectangle to create a second detailed view below the main scatterplot.</p>
+        </details>
+
+        <details class="mini-help color-legend">
+          <summary>🎨 Color Legend</summary>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#4e79a7;"></span>
+            <span>eng — English</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#2f5f8f;"></span>
+            <span>en-US — English US</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#8fb9d9;"></span>
+            <span>en-GB — English GB</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#59a14f;"></span>
+            <span>fre — French</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#e15759;"></span>
+            <span>ger — German</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#f28e2c;"></span>
+            <span>spa — Spanish</span>
+          </div>
+
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#bab0ab;"></span>
+            <span>other — Other languages</span>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- Main chart -->
+    <section class="chart-wrapper">
+      <div id="chart"></div>
+      <div id="tooltip" class="tooltip hidden"></div>
+      <div id="axisPicker" class="axis-picker-panel hidden">
+  <div class="axis-picker-title">📊 Change axes</div>
+
+<div class="axis-picker-select-row">
+  <label>X-axis:
+    <select id="xAxisPicker">
+      <option value="pages">📄 Pages</option>
+      <option value="rating">⭐ Average rating</option>
+      <option value="ratingsCount">👍 Ratings count</option>
+      <option value="publicationYear">📅 Publication year</option>
+    </select>
+  </label>
+
+  <label>Y-axis:
+    <select id="yAxisPicker">
+      <option value="pages">📄 Pages</option>
+      <option value="rating">⭐ Average rating</option>
+      <option value="ratingsCount">👍 Ratings count</option>
+      <option value="publicationYear">📅 Publication year</option>
+    </select>
+  </label>
+</div>
+
+  <div id="axisFilterDock" class="axis-filter-dock"></div>
+  <button id="axisPickerClose">Close</button>
+</div>
+    </section>
+
+    <!-- Focus detail chart below -->
+    <section class="chart-wrapper zoom-chart-wrapper" id="zoomChartWrapper" style="margin-top:24px;display:none;">
+      <div style="padding:12px 20px;background:#f8f9fc;border-bottom:1px solid #e9ecef;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-weight:600;color:#2c3e66;">🔍 Focus Region: <span id="zoomCount">0</span> books in selected region</span>
+        <button id="zoomCloseBtn" style="padding:4px 12px;background:#e94560;color:white;border:none;border-radius:4px;cursor:pointer;">✕ Close</button>
+      </div>
+      <div id="zoomChart"></div>
+      <div id="zoomTooltip" class="tooltip hidden"></div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  <script src="script.js"></script>
+</body>
+</html>
